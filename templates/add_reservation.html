@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Reservación</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Agregar Reservación</h2>
+        <form id="addReservationForm">
+            <div class="form-group">
+                <label for="name">Nombre</label>
+                <input type="text" class="form-control" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="date">Fecha</label>
+                <input type="date" class="form-control" id="date" required>
+            </div>
+            <div class="form-group">
+                <label for="start_time">Hora de Inicio</label>
+                <input type="time" class="form-control" id="start_time" required>
+            </div>
+            <div class="form-group">
+                <label for="end_time">Hora de Término</label>
+                <input type="time" class="form-control" id="end_time" readonly>
+            </div>
+            <div class="form-group">
+                <label for="reason">Motivo</label>
+                <textarea class="form-control" id="reason" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="people">Número de Personas</label>
+                <input type="number" class="form-control" id="people" required>
+            </div>
+            <div class="form-group">
+                <label for="contact">Contacto</label>
+                <input type="text" class="form-control" id="contact" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar Reservación</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        // Calcular la hora de término automáticamente
+        document.getElementById('start_time').addEventListener('change', function() {
+            const startTime = this.value;
+            if (startTime) {
+                const [hours, minutes] = startTime.split(':');
+                const endTime = new Date(0, 0, 0, parseInt(hours) + 2, parseInt(minutes));
+                document.getElementById('end_time').value = endTime.toTimeString().slice(0, 5);
+            }
+        });
+
+        // Manejar el envío del formulario
+        document.getElementById('addReservationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const reservationData = {
+                name: document.getElementById('name').value,
+                date: document.getElementById('date').value,
+                start_time: document.getElementById('start_time').value,
+                end_time: document.getElementById('end_time').value,
+                reason: document.getElementById('reason').value,
+                people: document.getElementById('people').value,
+                contact: document.getElementById('contact').value
+            };
+
+            fetch('/add_reservation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(reservationData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Reservación agregada con éxito');
+                    window.location.href = '/admin/dashboard';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al agregar la reservación');
+            });
+        });
+    </script>
+</body>
+</html>

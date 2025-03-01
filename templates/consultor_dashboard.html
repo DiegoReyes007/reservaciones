@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel De Reservaciones</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Reservaciones</h2>
+        
+        <div class="mb-4">
+            <a href="/logout" class="btn btn-danger">Cerrar Sesión</a>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Fecha</th>
+                    <th>Hora de Inicio</th>
+                    <th>Hora de Término</th>
+                    <th>Motivo</th>
+                    <th>Personas</th>
+                    <th>Contacto</th>
+                </tr>
+            </thead>
+            <tbody id="reservationsTable">
+                <!-- Las reservaciones se cargarán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        // Cargar las reservaciones al iniciar la página
+        fetch('/consultor/dashboard/data')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('reservationsTable');
+                data.forEach(reservation => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${reservation.name}</td>
+                        <td>${reservation.date}</td>
+                        <td>${reservation.start_time}</td>
+                        <td>${reservation.end_time}</td>
+                        <td>${reservation.reason}</td>
+                        <td>${reservation.people}</td>
+                        <td>${reservation.contact}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    </script>
+</body>
+</html>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f0f0f0;
+    }
+    .logo-container {
+        text-align: center;
+    }
+    .logo {
+        width: 200px; /* Tamaño fijo para el logo */
+        height: auto;
+    }
+</style>
+
+<body>
+ 
+    <div class="container mt-5">
+        <h2 class="mb-4">Reservaciones BAO</h2>
+        <div class="mb-4">
+            <a href="/add_reservation" class="btn btn-primary">Agregar Reservación</a>
+            <a href="/logout" class="btn btn-danger">Cerrar Sesión</a>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Fecha</th>
+                    <th>Hora de Inicio</th>
+                    <th>Hora de Término</th>
+                    <th>Motivo</th>
+                    <th>Personas</th>
+                    <th>Contacto</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="reservationsTable">
+                <!-- Las reservaciones se cargarán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal para editar reservación -->
+    <div class="modal fade" id="editReservationModal" tabindex="-1" aria-labelledby="editReservationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editReservationModalLabel">Modificar Reservación</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editReservationForm">
+                        <div class="form-group">
+                            <label for="editName">Nombre</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDate">Fecha</label>
+                            <input type="date" class="form-control" id="editDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editStartTime">Hora de Inicio</label>
+                            <input type="time" class="form-control" id="editStartTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editEndTime">Hora de Término</label>
+                            <input type="time" class="form-control" id="editEndTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editReason">Motivo</label>
+                            <textarea class="form-control" id="editReason" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPeople">Número de Personas</label>
+                            <input type="number" class="form-control" id="editPeople" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editContact">Contacto</label>
+                            <input type="text" class="form-control" id="editContact" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Cargar las reservaciones al iniciar la página
+        fetch('/admin/dashboard/data')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('reservationsTable');
+                data.forEach(reservation => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${reservation.name}</td>
+                        <td>${reservation.date}</td>
+                        <td>${reservation.start_time}</td>
+                        <td>${reservation.end_time}</td>
+                        <td>${reservation.reason}</td>
+                        <td>${reservation.people}</td>
+                        <td>${reservation.contact}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editReservation(${reservation.id})">Modificar</button>
+                            <button class="btn btn-info btn-sm" onclick="postponeReservation(${reservation.id})">Posponer</button>
+                            <button class="btn btn-success btn-sm" onclick="sendInvitation(${reservation.id})">Invitación</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteReservation(${reservation.id})">Eliminar</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+            let currentReservationId = null;
+
+function editReservation(id) {
+    currentReservationId = id;
+    fetch(`/reservation/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('editName').value = data.name;
+            document.getElementById('editDate').value = data.date;
+            document.getElementById('editStartTime').value = data.start_time;
+            document.getElementById('editEndTime').value = data.end_time;
+            document.getElementById('editReason').value = data.reason;
+            document.getElementById('editPeople').value = data.people;
+            document.getElementById('editContact').value = data.contact;
+            $('#editReservationModal').modal('show');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+document.getElementById('editReservationForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const updatedData = {
+        name: document.getElementById('editName').value,
+        date: document.getElementById('editDate').value,
+        start_time: document.getElementById('editStartTime').value,
+        end_time: document.getElementById('editEndTime').value,
+        reason: document.getElementById('editReason').value,
+        people: document.getElementById('editPeople').value,
+        contact: document.getElementById('editContact').value
+    };
+
+    fetch(`/update_reservation/${currentReservationId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Reservación actualizada con éxito');
+            $('#editReservationModal').modal('hide');  // Cerrar el modal
+            updateReservationInTable(data.reservation);  // Actualizar la fila en la tabla
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+
+// Función para actualizar una fila en la tabla
+function updateReservationInTable(reservation) {
+    const tableBody = document.getElementById('reservationsTable');
+    const rows = tableBody.getElementsByTagName('tr');
+
+    for (let row of rows) {
+        const rowId = row.getAttribute('data-id');
+        if (rowId == reservation.id) {
+            row.innerHTML = `
+                <td>${reservation.name}</td>
+                <td>${reservation.date}</td>
+                <td>${reservation.start_time}</td>
+                <td>${reservation.end_time}</td>
+                <td>${reservation.reason}</td>
+                <td>${reservation.people}</td>
+                <td>${reservation.contact}</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="editReservation(${reservation.id})">Modificar</button>
+                    <button class="btn btn-info btn-sm" onclick="postponeReservation(${reservation.id})">Posponer</button>
+                    <button class="btn btn-success btn-sm" onclick="sendInvitation(${reservation.id})">Invitación</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteReservation(${reservation.id})">Eliminar</button>
+                </td>
+            `;
+            break;
+        }
+    }
+}
+
+// Función para cargar las reservaciones en la tabla
+function loadReservations() {
+    fetch('/admin/dashboard/data')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('reservationsTable');
+            tableBody.innerHTML = '';  // Limpiar la tabla antes de cargar los datos
+
+            data.forEach(reservation => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-id', reservation.id);  // Agregar un atributo data-id
+                row.innerHTML = `
+                    <td>${reservation.name}</td>
+                    <td>${reservation.date}</td>
+                    <td>${reservation.start_time}</td>
+                    <td>${reservation.end_time}</td>
+                    <td>${reservation.reason}</td>
+                    <td>${reservation.people}</td>
+                    <td>${reservation.contact}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editReservation(${reservation.id})">Modificar</button>
+                        <button class="btn btn-info btn-sm" onclick="postponeReservation(${reservation.id})">Posponer</button>
+                       <button class="btn btn-success btn-sm" onclick="sendInvitation(${reservation.id})">Invitación</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteReservation(${reservation.id})">Eliminar</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// Cargar las reservaciones al iniciar la página
+loadReservations();
+
+// Función para cargar las reservaciones en la tabla
+function loadReservations() {
+    fetch('/admin/dashboard/data')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('reservationsTable');
+            tableBody.innerHTML = '';  // Limpiar la tabla antes de cargar los datos
+
+            data.forEach(reservation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${reservation.name}</td>
+                    <td>${reservation.date}</td>
+                    <td>${reservation.start_time}</td>
+                    <td>${reservation.end_time}</td>
+                    <td>${reservation.reason}</td>
+                    <td>${reservation.people}</td>
+                    <td>${reservation.contact}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editReservation(${reservation.id})">Modificar</button>
+                        <button class="btn btn-info btn-sm" onclick="postponeReservation(${reservation.id})">Posponer</button>
+                        <button class="btn btn-success btn-sm" onclick="sendInvitation(${reservation.id})">Invitación</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteReservation(${reservation.id})">Eliminar</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// Cargar las reservaciones al iniciar la página
+loadReservations();
+
+
+        // Función para enviar los cambios de la reservación
+        document.getElementById('editReservationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const updatedData = {
+                name: document.getElementById('editName').value,
+                date: document.getElementById('editDate').value,
+                start_time: document.getElementById('editStartTime').value,
+                end_time: document.getElementById('editEndTime').value,
+                reason: document.getElementById('editReason').value,
+                people: document.getElementById('editPeople').value,
+                contact: document.getElementById('editContact').value
+            };
+
+            fetch(`/update_reservation/${currentReservationId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Reservación actualizada con éxito');
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        // Función para posponer una reservación
+        function postponeReservation(id) {
+    fetch(`/postpone_reservation/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})  // Envía un objeto vacío
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Reservación pospuesta con éxito.\nNueva fecha: ${data.new_date}\nNueva hora de inicio: ${data.new_start_time}\nNueva hora de término: ${data.new_end_time}`);
+            window.location.reload();  // Recargar la página para actualizar la tabla
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+        // Función para enviar una invitación
+        let currentInvitationData = null;
+
+        function sendInvitation(id) {
+    fetch(`/generate_invitation/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Guardar los datos de la invitación
+                currentInvitationData = data.img_data;
+
+                // Mostrar la imagen en el modal
+                document.getElementById('invitationImage').src = `data:image/png;base64,${data.img_data}`;
+                $('#invitationModal').modal('show');  // Mostrar el modal
+            } else {
+                alert(data.message);  // Mostrar un mensaje de error si la generación falla
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al generar la invitación');
+        });
+}
+
+// Función para enviar la invitación por correo electrónico
+function sendEmail() {
+    const email = prompt("Ingrese el correo electrónico para enviar la invitación:");
+    if (email) {
+        fetch('/send_invitation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: email,
+                img_data: currentInvitationData
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Invitación enviada con éxito');
+            } else {
+                alert('Error al enviar la invitación');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+}
+
+// Función para enviar la invitación por WhatsApp
+function sendWhatsApp() {
+    const phone = prompt("Ingrese el número de WhatsApp (con código de país, por ejemplo, +521234567890):");
+    if (phone) {
+        // Convertir la imagen base64 a un enlace descargable
+        const link = document.createElement('a');
+        link.href = `data:image/png;base64,${currentInvitationData}`;
+        link.download = 'invitation.png';
+        link.click();
+
+        // Crear el mensaje de WhatsApp
+        const message = "Aquí está tu invitación. Descarga la imagen adjunta.";
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    }
+}
+        // Función para eliminar una reservación
+        function deleteReservation(id) {
+            if (confirm('¿Estás seguro de eliminar esta reservación?')) {
+                fetch(`/delete_reservation/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Reservación eliminada con éxito');
+                        window.location.reload();
+                    } else {
+                        alert('Error al eliminar la reservación');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+    </script>
+
+<!-- Modal para previsualizar la invitación -->
+<div class="modal fade" id="invitationModal" tabindex="-1" aria-labelledby="invitationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="invitationModalLabel">Previsualización de la Invitación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="invitationImage" src="" alt="Invitación" class="img-fluid">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button id="downloadBtn" class="btn btn-primary">Descargar Invitación</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("downloadBtn").addEventListener("click", async function () {
+        try {
+            // Hacer la solicitud al backend
+            const response = await fetch("/generate_invite?name=Diego&date=2025-03-01&time=19:00&people=4&location=Restaurante Bao");
+            if (!response.ok) throw new Error("Error al obtener la invitación");
+
+            // Crear un enlace de descarga
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            
+            // Crear un elemento <a> para descargar el archivo
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "invitacion.png";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Liberar memoria
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error al descargar la invitación:", error);
+            alert("Hubo un problema al descargar la invitación.");
+        }
+    });
+</script>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
