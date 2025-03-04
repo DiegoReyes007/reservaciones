@@ -11,24 +11,24 @@ from PIL import Image, ImageDraw, ImageFont
 import base64
 import io
 import os
+from flask_migrate import Migrate
+
+
+
 
 # Configuración de la aplicación Flask
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'una_clave_secreta_muy_segura'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://neondb_owner:npg_EeSaUC82JorQ@ep-restless-water-a5aah6ni-pooler.us-east-2.aws.neon.tech/neondb'
+app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://neondb_owner:npg_EeSaUC82JorQ@ep-restless-water-a5aah6ni-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True}  # Evita desconexiones inesperadas
 
-# Configuración de Flask-Mail
-app.config['MAIL_SERVER'] = 'smtp.example.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'soporteti.quikredito@gmail.com'
-app.config['MAIL_PASSWORD'] = 'Qu1kr3d1t00717'
-mail = Mail(app)
+
 
 # Inicializar la base de datos
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 
 # Inicializar Flask-Login
 login_manager = LoginManager(app)
@@ -38,7 +38,7 @@ login_manager.login_view = 'login'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(64), nullable=False)  # 'admin' o 'consultor'
 
     def set_password(self, password):
@@ -465,6 +465,23 @@ def get_reservation(id):
         return jsonify({"success": False, "message": "Reserva no encontrada"}), 404
 
 
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'user'
+    __table_args__ = {'extend_existing': True}  # Permite redefinir la tabla
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(128), unique=True, nullable=False)
+    password_hash = db.Column(db.String(512), nullable=False)  # Asegúrate de que tenga suficiente espacio
+    role = db.Column(db.String(128), nullable=False)  # 'admin' o 'consultor'
+
+    # Método para establecer la contraseña
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    # Método para verificar la contraseña
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 
 
