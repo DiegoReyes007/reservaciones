@@ -15,8 +15,9 @@ import os
 # Configuración de la aplicación Flask
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'una_clave_secreta_muy_segura'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///reservations.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://neondb_owner:npg_EeSaUC82JorQ@ep-restless-water-a5aah6ni-pooler.us-east-2.aws.neon.tech/neondb'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True}  # Evita desconexiones inesperadas
 
 # Configuración de Flask-Mail
 app.config['MAIL_SERVER'] = 'smtp.example.com'
