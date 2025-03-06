@@ -433,13 +433,19 @@ def generate_confirmation_invitation(name, date, time, people, location):
     # Definir colores
     text_color = (0, 0, 0)  # Negro
     header_color = (0, 0, 139)  # Azul oscuro
-
+    img = Image.new("RGB", (800, 600), "white")
+    draw = ImageDraw.Draw(img)
     # Título
-    draw.text((200, 50), "INVITACIÓN A TU EXPERIENCIA EN BAO", font=font_large, fill=header_color)
+    draw.text((200, 50), "INVITACION A TU EXPERIENCIA EN BAO", font=font_large, fill=header_color)
+    logo = Image.open(r"C:\Users\SISTEMAS\Desktop\BAO\imagen\logo.png")  # Ruta completa
+    logo = logo.resize((150, 150))  # Ajustar tamaño del logo si es necesario
+    img.paste(logo, (325, 90))  # Posición debajo del título
+
 
     # Cuerpo del mensaje
-    draw.text((20, 200), f"Estimado/a {name},", font=font_medium, fill=text_color)
-    draw.text((20, 250), "Gracias por elegir Bao para disfrutar de una experiencia gastronómica única.", font=font_small, fill=text_color)
+    draw.text((20, 200), "Estimado/a", font=font_medium, fill=text_color)  
+    draw.text((20, 230), name + ",", font=font_medium, fill=text_color)  # Posición más abajo
+    draw.text((20, 255), "Gracias por elegir Bao para disfrutar de una experiencia gastronómica única.", font=font_small, fill=text_color)
     draw.text((20, 280), "Nos complace confirmar tu reservación con los siguientes detalles:", font=font_small, fill=text_color)
     draw.text((20, 330), f"Fecha: {date}", font=font_medium, fill=text_color)
     draw.text((20, 370), f"Hora: {time}", font=font_medium, fill=text_color)
