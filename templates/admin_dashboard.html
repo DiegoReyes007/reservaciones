@@ -24,10 +24,13 @@
         height: auto;
     }
 
-    .table-container {
+
+.table-container {
     max-height: 300px; /* Ajusta según necesites */
     overflow-y: auto;
+    border: 1px solid #ccc; /* Opcional: para visualizar los bordes */
 }
+
 
 </style>
 
@@ -39,6 +42,7 @@
             <a href="/add_reservation" class="btn btn-primary">Agregar Reservación</a>
             <a href="/logout" class="btn btn-danger">Cerrar Sesión</a>
         </div>
+        <div class="table-container">    
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -57,7 +61,7 @@
             </tbody>
         </table>
     </div>
-
+</div>
     <!-- Modal para editar reservación -->
     <div class="modal fade" id="editReservationModal" tabindex="-1" aria-labelledby="editReservationModalLabel" aria-hidden="true">
         <div class="modal-dialog">
