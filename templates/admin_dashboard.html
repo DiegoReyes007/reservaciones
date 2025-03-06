@@ -23,6 +23,12 @@
         width: 200px; /* Tamaño fijo para el logo */
         height: auto;
     }
+
+    .table-container {
+    max-height: 300px; /* Ajusta según necesites */
+    overflow-y: auto;
+}
+
 </style>
 
 <body>
@@ -251,7 +257,6 @@ function loadReservations() {
 
 // Cargar las reservaciones al iniciar la página
 loadReservations();
-
 // Función para cargar las reservaciones en la tabla
 function loadReservations() {
     fetch('/admin/dashboard/data')
