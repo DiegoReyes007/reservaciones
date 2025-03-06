@@ -437,7 +437,8 @@ def generate_confirmation_invitation(name, date, time, people, location):
     draw = ImageDraw.Draw(img)
     # Título
     draw.text((200, 50), "INVITACION A TU EXPERIENCIA EN BAO", font=font_large, fill=header_color)
-    logo = Image.open(r"C:\Users\SISTEMAS\Desktop\BAO\imagen\logo.png")  # Ruta completa
+    logo = Image.open("imagenes/logo.png")  # Accede a la imagen en la carpeta del proyecto
+
     logo = logo.resize((150, 150))  # Ajustar tamaño del logo si es necesario
     img.paste(logo, (325, 90))  # Posición debajo del título
 
